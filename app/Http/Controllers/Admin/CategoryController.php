@@ -24,7 +24,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => 'required|string|unique:categories,title',
+            'title' => 'required|string',
             'description' => 'nullable|string',
             'hero_image' => 'nullable|image|max:5120',
         ]);

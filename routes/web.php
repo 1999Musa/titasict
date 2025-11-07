@@ -3,25 +3,11 @@
 use Illuminate\Support\Facades\Route;
 
 // ✅ Import all controllers
-use App\Http\Controllers\Admin\TeamMemberController;
-use App\Http\Controllers\Admin\PlaceOrderItemController;
-use App\Http\Controllers\Admin\ProductCategoryController;
-use App\Http\Controllers\Admin\HeroSliderController;
-use App\Http\Controllers\Admin\FactoryController;
-use App\Http\Controllers\Admin\SustainabilityController;
-use App\Http\Controllers\Admin\LogoController;
-use App\Http\Controllers\Admin\ProductSliderController;
-use App\Http\Controllers\Admin\FrontFactoryController;
-use App\Http\Controllers\Admin\CertifiedLogoController;
-use App\Http\Controllers\Admin\ShortStoryVideoController;
-use App\Http\Controllers\Admin\AboutHeroController;
-use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\ChooseHeroController;
-use App\Http\Controllers\Admin\ExcellenceController;
-use App\Http\Controllers\Admin\CommunitySectionController;
-use App\Http\Controllers\Admin\ContactHeroController;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\BatchDayController;
+use App\Http\Controllers\Admin\BatchTimeController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\PaymentController;
 
 // ✅ Default routes
 Route::get('/', function () {
@@ -38,46 +24,35 @@ Route::middleware(['auth'])
     ->name('admin.')
     ->group(function () {
 
-        // Product & Category Management
-        Route::resource('categories', AdminCategoryController::class);
-        Route::resource('products', AdminProductController::class);
+        Route::delete('/payments/bulk-delete', [PaymentController::class, 'bulkDelete'])
+            ->name('payments.bulkDelete');
+        Route::get('/payments/search-students', [PaymentController::class, 'searchStudents'])
+            ->name('payments.searchStudents');
 
-        // Other Admin Resources
-        Route::resource('contacthero', ContactHeroController::class);
-        Route::resource('community', CommunitySectionController::class);
-        Route::resource('team-members', TeamMemberController::class);
-        Route::resource('orders', PlaceOrderItemController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('order-steps', PlaceOrderItemController::class)->parameters(['order-steps' => 'order_step']);
-        Route::resource('important-infos', PlaceOrderItemController::class)->parameters(['important-infos' => 'important_info']);
-        Route::resource('place-order', PlaceOrderItemController::class);
-        Route::resource('hero-sliders', HeroSliderController::class);
-        Route::resource('factory', FactoryController::class);
-        Route::resource('sustainability', SustainabilityController::class);
-        Route::resource('logo', LogoController::class);
-        Route::resource('product-sliders', ProductSliderController::class);
-        Route::resource('front-factory', FrontFactoryController::class);
-        Route::resource('certified-logos', CertifiedLogoController::class);
-        Route::resource('short-story', ShortStoryVideoController::class);
-        Route::resource('about-hero', AboutHeroController::class);
-        Route::resource('clients', ClientController::class);
-        Route::resource('chooseimg', ChooseHeroController::class);
+        Route::match(['get', 'post'], 'payments/save-pdf', [PaymentController::class, 'storeAndPrintPdf'])
+            ->name('payments.savePdf');
 
-        // Excellence
-        Route::resource('excellence', ExcellenceController::class)
-            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        // Batch Management
+        Route::resource('batches', \App\Http\Controllers\Admin\BatchController::class);
+        Route::resource('batch-days', \App\Http\Controllers\Admin\BatchDayController::class);
+        Route::resource('batch-times', \App\Http\Controllers\Admin\BatchTimeController::class);
+        Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
 
-        // Custom route for removing excellence image
-        Route::delete('excellence/{id}/remove-image', [ExcellenceController::class, 'removeImage'])
-            ->name('excellence.removeImage');
+        Route::resource('payments', App\Http\Controllers\Admin\PaymentController::class)->except(['show']);
+
+        // Admin group (inside ->group(function () { ... }))
+        Route::get('payments/months/{student}', [PaymentController::class, 'getMonths'])
+            ->name('admin.payments.months');
+        Route::resource('/admin/payments', App\Http\Controllers\Admin\PaymentController::class);
+
+
+
+
+        Route::get('/students/{student}/pdf', [StudentController::class, 'generatePdf'])
+            ->name('students.pdf');
+
     });
-use Illuminate\Support\Facades\Mail;
 
-Route::get('/test-mail', function () {
-    Mail::raw('Browser test mail from Laravel', function ($msg) {
-        $msg->to('yourpersonalemail@gmail.com')->subject('Test from browser');
-    });
-    return '✅ Mail sent!';
-});
 
 // ✅ Authentication routes
 require __DIR__ . '/auth.php';

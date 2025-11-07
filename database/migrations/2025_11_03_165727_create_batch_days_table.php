@@ -7,17 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('batch_days', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('hero_image')->nullable(); // category hero image path
+            $table->foreignId('batch_id')->constrained()->cascadeOnDelete();
+            $table->string('days'); // e.g., "Sat-Mon-Wed"
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('batch_days');
     }
 };

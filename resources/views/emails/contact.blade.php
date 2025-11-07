@@ -5,7 +5,7 @@
     <title>New Contact Message</title>
 </head>
 <body>
-    <h2>New Contact Form Submission</h2>
+    <h2>New Message From Arbella Website</h2>
     <p><strong>Name:</strong> {{ $name }}</p>
     <p><strong>Email:</strong> {{ $email }}</p>
     <p><strong>Phone:</strong> {{ $phone }}</p>

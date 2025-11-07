@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -15,20 +15,22 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .active-link {
             background-color: #10b981;
             color: white !important;
         }
+
         .active-group {
-            background-color: #a8e910 !important; /* Tailwind yellow-300 */
+            background-color: #a8e910 !important;
+            /* Tailwind yellow-300 */
         }
     </style>
 </head>
 
 <body class="min-h-screen bg-[#F4F7F6] text-gray-800 p-4 lg:p-8">
 
-    <div class="flex h-full max-h-[95vh]" 
-        x-data="{ open: localStorage.getItem('openGroup') || '' }" 
+    <div class="flex h-full max-h-[95vh]" x-data="{ open: localStorage.getItem('openGroup') || '' }"
         x-init="$watch('open', val => localStorage.setItem('openGroup', val))">
 
         <!-- Sidebar -->
@@ -46,7 +48,7 @@
                     </div>
                     <div>
                         <a href="{{ route('dashboard') }}">
-                            <h1 class="text-xl font-bold text-gray-800">Arbella Admin</h1>
+                            <h1 class="text-xl font-bold text-gray-800">Titas ICT</h1>
                         </a>
                         <p class="text-xs text-gray-500">Manage your world, beautifully</p>
                     </div>
@@ -56,32 +58,30 @@
             <nav x-data class="flex-1 overflow-y-auto mt-6 px-2 space-y-2">
 
                 {{-- LANDING PAGE --}}
-                <div>
-                    <button 
-                        :class="open === 'landing' ? 'active-group' : ''"
-                        @click="open = (open === 'landing' ? '' : 'landing')"
-                        class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
-                        <span>Landing Page</span>
-                        <svg :class="open === 'landing' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <div x-show="open === 'landing'" x-collapse class="ml-4 mt-1 space-y-1">
-                        <x-admin-link route="admin.logo.index" label="Logo" class="ajax-link" />
-                        <x-admin-link route="admin.hero-sliders.index" label="Hero Sliders" class="ajax-link" />
-                        <x-admin-link route="admin.product-sliders.index" label="Product Sliders" class="ajax-link" />
-                        <x-admin-link route="admin.front-factory.index" label="Front Factory" class="ajax-link" />
-                        <x-admin-link route="admin.certified-logos.index" label="Certified Logos" class="ajax-link" />
-                        <x-admin-link route="admin.short-story.index" label="Short Story Video" class="ajax-link" />
-                    </div>
-                </div>
+                    {{-- <div>
+                        <button :class="open === 'landing' ? 'active-group' : ''"
+                            @click="open = (open === 'landing' ? '' : 'landing')"
+                            class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                            <span>Landing Page</span>
+                            <svg :class="open === 'landing' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="open === 'landing'" x-collapse class="ml-4 mt-1 space-y-1">
+                            <x-admin-link route="admin.logo.index" label="Logo" class="ajax-link" />
+                            <x-admin-link route="admin.hero-sliders.index" label="Hero Sliders" class="ajax-link" />
+                            <x-admin-link route="admin.product-sliders.index" label="Product Sliders" class="ajax-link" />
+                            <x-admin-link route="admin.front-factory.index" label="Front Factory" class="ajax-link" />
+                            <x-admin-link route="admin.certified-logos.index" label="Certified Logos" class="ajax-link" />
+                            <x-admin-link route="admin.short-story.index" label="Short Story Video" class="ajax-link" />
+                        </div>
+                    </div> --}}
 
                 {{-- ABOUT US --}}
-                <div>
-                    <button 
-                        :class="open === 'about' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'about' ? 'active-group' : ''"
                         @click="open = (open === 'about' ? '' : 'about')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>About Us</span>
@@ -96,12 +96,11 @@
                         <x-admin-link route="admin.team-members.index" label="Team Members" class="ajax-link" />
                         <x-admin-link route="admin.clients.index" label="Clients" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- PRODUCTS --}}
-                <div>
-                    <button 
-                        :class="open === 'products' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'products' ? 'active-group' : ''"
                         @click="open = (open === 'products' ? '' : 'products')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Products</span>
@@ -113,14 +112,69 @@
                     </button>
                     <div x-show="open === 'products'" x-collapse class="ml-4 mt-1 space-y-1">
                         <x-admin-link route="admin.categories.index" label=" Categories" class="ajax-link" />
-                        <x-admin-link route="admin.products.index" label="Product Lists" class="ajax-link" />
+                        <x-admin-link route="admin.products.index" label="Products" class="ajax-link" />
+                    </div>
+                </div> --}}
+
+                {{-- Batch --}}
+                <div>
+                    <button :class="open === 'batch' ? 'active-group' : ''"
+                        @click="open = (open === 'batch' ? '' : 'batch')"
+                        class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                        <span>Batch</span>
+                        <svg :class="open === 'batch' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open === 'batch'" x-collapse class="ml-4 mt-1 space-y-1">
+                        <x-admin-link route="admin.batch-days.index" label="Create Batch Days" class="ajax-link" />
+
+                    </div>
+                </div>
+                {{-- Students --}}
+                <div>
+                    <button :class="open === 'students' ? 'active-group' : ''"
+                        @click="open = (open === 'students' ? '' : 'students')"
+                        class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                        <span>Students</span>
+                        <svg :class="open === 'students' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open === 'students'" x-collapse class="ml-4 mt-1 space-y-1">
+                        <x-admin-link route="admin.students.index" label="All Students" class="ajax-link" />
                     </div>
                 </div>
 
-                {{-- WHY CHOOSE ARBELLA --}}
                 <div>
-                    <button 
-                        :class="open === 'choose' ? 'active-group' : ''"
+                    <button :class="open === 'payments' ? 'active-group' : ''"
+                        @click="open = (open === 'payments' ? '' : 'payments')"
+                        class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                        <span>Payments</span>
+                        <svg :class="open === 'payments' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open === 'payments'" x-collapse class="ml-4 mt-1 space-y-1">
+                        <x-admin-link route="admin.payments.index" label="All Payments" class="ajax-link" />
+                    </div>
+                </div>
+
+
+
+
+                {{-- WHY CHOOSE ARBELLA --}}
+                {{-- <div>
+                    <button :class="open === 'choose' ? 'active-group' : ''"
                         @click="open = (open === 'choose' ? '' : 'choose')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Why Choose Arbella</span>
@@ -133,12 +187,11 @@
                     <div x-show="open === 'choose'" x-collapse class="ml-4 mt-1 space-y-1">
                         <x-admin-link route="admin.chooseimg.index" label="Choose Section Hero" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- OUR FACTORY --}}
-                <div>
-                    <button 
-                        :class="open === 'factory' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'factory' ? 'active-group' : ''"
                         @click="open = (open === 'factory' ? '' : 'factory')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Our Factory</span>
@@ -152,12 +205,11 @@
                         <x-admin-link route="admin.excellence.index" label="Excellence Section" class="ajax-link" />
                         <x-admin-link route="admin.factory.index" label="Factory" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- SUSTAINABILITY --}}
-                <div>
-                    <button 
-                        :class="open === 'sustain' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'sustain' ? 'active-group' : ''"
                         @click="open = (open === 'sustain' ? '' : 'sustain')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Sustainability</span>
@@ -170,12 +222,11 @@
                     <div x-show="open === 'sustain'" x-collapse class="ml-4 mt-1 space-y-1">
                         <x-admin-link route="admin.sustainability.index" label="Hero Image" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- COMMUNITY --}}
-                <div>
-                    <button 
-                        :class="open === 'community' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'community' ? 'active-group' : ''"
                         @click="open = (open === 'community' ? '' : 'community')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Community</span>
@@ -188,12 +239,11 @@
                     <div x-show="open === 'community'" x-collapse class="ml-4 mt-1 space-y-1">
                         <x-admin-link route="admin.community.index" label="Community" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- CONTACT US --}}
-                <div>
-                    <button 
-                        :class="open === 'contact' ? 'active-group' : ''"
+                {{-- <div>
+                    <button :class="open === 'contact' ? 'active-group' : ''"
                         @click="open = (open === 'contact' ? '' : 'contact')"
                         class="flex justify-between items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition">
                         <span>Contact Us</span>
@@ -206,7 +256,7 @@
                     <div x-show="open === 'contact'" x-collapse class="ml-4 mt-1 space-y-1">
                         <x-admin-link route="admin.contacthero.index" label="Contact Hero" class="ajax-link" />
                     </div>
-                </div>
+                </div> --}}
             </nav>
 
             <div class="mt-auto p-2">
@@ -232,7 +282,7 @@
                 <div class="mb-8 flex items-center justify-between">
                     <div>
                         <h2 class="text-3xl font-bold text-gray-800">@yield('title')</h2>
-                        <p class="text-sm text-gray-500 mt-1">Manage your world, beautifully</p>
+                        <p class="text-sm text-gray-500 mt-1">Manage your students, Smoothly</p>
                     </div>
                     <a href="{{ url('/') }}" target="_blank"
                         class="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-600 shadow-md transition-all">
@@ -241,7 +291,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        View Website
+                        Manage profile
                     </a>
                 </div>
 
@@ -288,4 +338,5 @@
     </script>
 
 </body>
+
 </html>

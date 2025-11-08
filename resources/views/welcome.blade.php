@@ -93,7 +93,7 @@
 
     <div class="welcome-card rounded-3xl p-12 text-center shadow-2xl w-full max-w-md mx-4">
         <h1 class="text-4xl font-extrabold text-white mb-3 tracking-tight">
-            Arbella Admin
+            Titas ICT
         </h1>
         <p class="text-lg text-gray-300 mb-8">
             Please log in to manage your dashboard.

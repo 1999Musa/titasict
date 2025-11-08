@@ -31,6 +31,7 @@ Route::middleware(['auth'])
 
         Route::match(['get', 'post'], 'payments/save-pdf', [PaymentController::class, 'storeAndPrintPdf'])
             ->name('payments.savePdf');
+            
 
         // Batch Management
         Route::resource('batches', \App\Http\Controllers\Admin\BatchController::class);

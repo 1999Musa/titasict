@@ -11,6 +11,7 @@
             <h2 class="text-3xl font-bold text-gray-800">
                 Students Management
             </h2>
+           
 
             {{-- Total Students Badge (Cool Color) --}}
             <div class="mt-2 sm:mt-0 bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md">

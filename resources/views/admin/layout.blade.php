@@ -277,27 +277,40 @@
 
 
         <!-- Main Content -->
-        <main class="flex-1 ml-4 lg:ml-8">
-            <div id="mainContent" class="bg-white h-full rounded-2xl shadow-lg p-6 lg:p-10 overflow-y-auto">
-                <div class="mb-8 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-800">@yield('title')</h2>
-                        <p class="text-sm text-gray-500 mt-1">Manage your students, Smoothly</p>
-                    </div>
-                    <a href="{{ url('/') }}" target="_blank"
-                        class="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-600 shadow-md transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Manage profile
-                    </a>
-                </div>
-
-                @yield('content')
+<main class="flex-1 ml-4 lg:ml-8">
+    <div id="mainContent" class="bg-white h-full rounded-2xl shadow-lg p-6 lg:p-10 overflow-y-auto">
+        <div class="mb-0 flex items-center justify-between">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800">@yield('title')</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage your students, Smoothly</p>
             </div>
-        </main>
+            <a href="{{ url('/') }}" target="_blank"
+                class="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-600 shadow-md transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Manage profile
+            </a>
+        </div>
+
+        @yield('content')
+
+        <!-- Developer Credit Section -->
+        <div class="mt-10 border-t pt-6 text-center">
+            <p class="text-gray-600 text-sm mb-3">
+                Software developed by <span class="font-semibold text-gray-800">Musa Md Obayed</span> 
+                (<a href="tel:01722402173" class="text-emerald-500 hover:underline">01722402173</a>)
+            </p>
+            <div class="flex justify-center">
+                {!! QrCode::size(65)->generate('https://www.linkedin.com/in/musa-md-obayed-52aa66251/') !!}
+            </div>
+        </div>
+
+    </div>
+</main>
+
     </div>
 
     <script>

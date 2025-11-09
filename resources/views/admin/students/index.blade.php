@@ -12,9 +12,8 @@
                 Students Management
             </h2>
            
-
             {{-- Total Students Badge (Cool Color) --}}
-            <div class="mt-2 sm:mt-0 bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md">
+            <div style="background-color: rgb(5, 49, 131)" class="mt-2 sm:mt-0 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md">
                 Total Students: {{ $students->total() ?? count($students) }}
             </div>
         </div>
@@ -27,48 +26,117 @@
         @endif
 
         {{-- Filters & Counts Card --}}
-        <div class="mb-4 p-4 bg-white shadow rounded-lg border border-gray-200">
-            <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-wrap gap-3 items-center">
-                <input type="text" name="mobile_number" value="{{ request('mobile_number') }}"
-                    placeholder="Search by student mobile"
-                    class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400 flex-1">
+<div class="mb-4 p-4 bg-white shadow rounded-lg border border-gray-200">
+    <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-wrap gap-3 items-center">
 
-                <select name="payment_status"
-                    class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400">
-                    <option value="">All Payments</option>
-                    <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="Pending" {{ request('payment_status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                </select>
+        <input type="text" name="mobile_number" value="{{ request('mobile_number') }}"
+            placeholder="Search by student mobile"
+            class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400 flex-1">
 
-                <button type="submit"
-                    class="bg-blue-500 text-white px-5 py-2 text-sm font-medium rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition">
-                    Filter
-                </button>
-            </form>
+        <select name="payment_status"
+            class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400">
+            <option value="">All Payments</option>
+            <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>Paid</option>
+            <option value="Pending" {{ request('payment_status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+        </select>
 
-            {{-- Payment Counts --}}
-            <div class="mt-4 text-sm text-gray-600">
-                <span class="mr-6">Total Paid: <strong class="text-gray-900">{{ $paidCount ?? 0 }}</strong></span>
-                <span>Total Pending: <strong class="text-gray-900">{{ $pendingCount ?? 0 }}</strong></span>
-            </div>
-        </div>
+        {{-- Filter by Batch Day --}}
+        <select name="batch_day"
+            class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400">
+            <option value="">All Days</option>
+            @foreach ($batchDays as $day)
+                <option value="{{ $day }}" {{ request('batch_day') == $day ? 'selected' : '' }}>{{ $day }}</option>
+            @endforeach
+        </select>
+
+        {{-- Filter by Batch Time --}}
+        <select name="batch_time"
+            class="border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-400 focus:border-blue-400">
+            <option value="">All Times</option>
+            @foreach ($batchTimes as $time)
+                <option value="{{ $time }}" {{ request('batch_time') == $time ? 'selected' : '' }}>{{ $time }}</option>
+            @endforeach
+        </select>
+
+        <button type="submit"
+            class="bg-blue-500 text-white px-5 py-2 text-sm font-medium rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition">
+            Filter
+        </button>
+    </form>
+
+    {{-- Payment Counts --}}
+    <div class="mt-4 text-sm text-gray-600">
+        <span class="mr-6">Total Paid: <strong class="text-gray-900">{{ $paidCount ?? 0 }}</strong></span>
+        <span>Total Pending: <strong class="text-gray-900">{{ $pendingCount ?? 0 }}</strong></span>
+    </div>
+</div>
+
 
         {{-- Add Button --}}
-        <div class="flex justify-end mb-4">
+        <div class="flex justify-between mb-4">
+            <form id="moveToExForm" method="POST" action="{{ route('admin.students.moveToEx') }}">
+        @csrf
+        <button type="submit"
+            onclick="return confirm('Move selected students to Ex Students group?')"
+            style="background-color: rgb(212, 88, 5)"
+            class="text-white px-4 py-2 text-sm font-semibold rounded-lg shadow hover:from-red-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition">
+            Move to Ex Students
+        </button>
+    </form>
             <a href="{{ route('admin.students.create') }}"
                 class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition">
                 + Add New Student
             </a>
         </div>
 
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+    <div class="flex items-center gap-3 mb-3 sm:mb-0">
+        <label class="flex items-center space-x-2 text-sm text-gray-700">
+            <input type="checkbox" id="selectAll" class="rounded border-gray-300">
+            <span>Select All</span>
+        </label>
+    </div>
+
+    
+</div>
+
+<script>
+    // Select All Checkbox
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Form submission check
+    document.getElementById('moveToExForm').addEventListener('submit', function(e) {
+        const selected = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+            .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+            return;
+        }
+
+        selected.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'student_ids[]';
+            input.value = id;
+            this.appendChild(input);
+        });
+    });
+</script>
+
         {{-- Table --}}
         <div class="overflow-x-auto bg-white shadow rounded-lg border border-gray-200">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">#</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian Mobile</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G_Mobile</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Year</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Day</th>
@@ -81,6 +149,9 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse ($students as $student)
                         <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3">
+                                <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" class="student-checkbox">
+                            </td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $student->name }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->mobile_number }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->guardian_mobile_number ?? '—' }}</td>

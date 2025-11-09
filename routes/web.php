@@ -24,6 +24,10 @@ Route::middleware(['auth'])
     ->name('admin.')
     ->group(function () {
 
+
+        Route::get('/students/ex', [StudentController::class, 'exStudents'])->name('students.ex');
+        Route::post('/students/move-to-ex', [StudentController::class, 'moveToEx'])->name('students.moveToEx');
+
         Route::delete('/payments/bulk-delete', [PaymentController::class, 'bulkDelete'])
             ->name('payments.bulkDelete');
         Route::get('/payments/search-students', [PaymentController::class, 'searchStudents'])
@@ -31,7 +35,6 @@ Route::middleware(['auth'])
 
         Route::match(['get', 'post'], 'payments/save-pdf', [PaymentController::class, 'storeAndPrintPdf'])
             ->name('payments.savePdf');
-            
 
         // Batch Management
         Route::resource('batches', \App\Http\Controllers\Admin\BatchController::class);

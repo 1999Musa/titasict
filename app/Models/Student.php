@@ -18,6 +18,7 @@ class Student extends Model
         'guardian_mobile_number',
         'gender',
         'exam_year',
+        'status',
     ];
 
     public function batchDay()

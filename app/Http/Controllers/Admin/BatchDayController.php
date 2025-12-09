@@ -27,26 +27,50 @@ class BatchDayController extends Controller
     {
         $request->validate([
             'days' => 'required|string',
-            'times.*' => 'nullable|string',
+            'times' => 'required|array|min:1',
+            'times.*' => 'required|string',
         ]);
 
-        $batchDay = BatchDay::create([
-            'days' => $request->days,
-        ]);
+        $times = array_map('trim', $request->times);
 
-        if ($request->filled('times')) {
-            foreach ($request->times as $time) {
-                if ($time && !BatchTime::where('batch_day_id', $batchDay->id)->where('time', $time)->exists()) {
-                    BatchTime::create([
-                        'batch_day_id' => $batchDay->id,
-                        'time' => $time,
-                    ]);
-                }
+        // 1. Prevent duplicate times inside the submitted list
+        if (count($times) !== count(array_unique($times))) {
+            return back()->withErrors([
+                'times' => 'Duplicate time slots are not allowed in the form submission.'
+            ])->withInput();
+        }
+
+        // 2. Prevent creating a day+time combination that ALREADY exists
+        foreach ($times as $time) {
+            // Check if any existing BatchDay with the same 'days' string already has this time
+            $exists = BatchDay::where('days', $request->days)
+                ->whereHas('times', function($q) use ($time) {
+                    $q->where('time', $time);
+                })
+                ->exists();
+
+            if ($exists) {
+                return back()->withErrors([
+                    'times' => "The time slot '$time' already exists for the day '$request->days'."
+                ])->withInput();
             }
         }
 
-        return redirect()->route('admin.batch-days.index')->with('success', 'Batch Day created successfully.');
+        // ✔ Create new batch day
+        $batchDay = BatchDay::create(['days' => $request->days]);
+
+        // ✔ Insert times safely
+        foreach ($times as $time) {
+            BatchTime::create([
+                'batch_day_id' => $batchDay->id,
+                'time' => $time,
+            ]);
+        }
+
+        return redirect()->route('admin.batch-days.index')
+            ->with('success', 'Batch Day created successfully.');
     }
+
 
     // Show edit form
     public function edit(BatchDay $batchDay)
@@ -60,32 +84,78 @@ class BatchDayController extends Controller
     {
         $request->validate([
             'days' => 'required|string',
-            'times.*' => 'nullable|string',
+            'times' => 'required|array|min:1',
+            'times.*' => 'required|string',
         ]);
 
-        $batchDay->update([
-            'days' => $request->days,
-        ]);
+        $submittedTimes = array_map('trim', $request->times);
 
-        $batchDay->times()->delete();
+        // 1️⃣ Prevent duplicate times inside form
+        if (count($submittedTimes) !== count(array_unique($submittedTimes))) {
+            return back()
+                ->withErrors(['times' => 'Duplicate time slots are not allowed in the form submission.'])
+                ->withInput();
+        }
 
-        if ($request->filled('times')) {
-            foreach ($request->times as $time) {
-                if ($time && !BatchTime::where('batch_day_id', $batchDay->id)->where('time', $time)->exists()) {
-                    BatchTime::create([
-                        'batch_day_id' => $batchDay->id,
-                        'time' => $time,
-                    ]);
+        // 2️⃣ Check if the same day+time exists in ANY BatchDay EXCEPT the current one
+        foreach ($submittedTimes as $time) {
+            
+            // Check if another BatchDay (with the same 'days' string) has this time
+            $exists = BatchDay::where('days', $request->days)
+                ->where('id', '!=', $batchDay->id) // Exclude the current BatchDay record
+                ->whereHas('times', function ($q) use ($time) {
+                    $q->where('time', $time);
+                })
+                ->exists();
+
+            if ($exists) {
+                return back()->withErrors([
+                    'times' => "The time slot '$time' already exists for the days '{$request->days}' in another batch."
+                ])->withInput();
+            }
+            
+            // Additionally, check if the days string is being changed, but a time conflicts with an existing day+time in a DIFFERENT batch.
+            if ($request->days != $batchDay->days) {
+                $conflict = BatchDay::where('days', $request->days)
+                    ->whereHas('times', function ($q) use ($time) {
+                        $q->where('time', $time);
+                    })
+                    ->exists();
+                
+                if ($conflict) {
+                    return back()->withErrors([
+                        'times' => "The time slot '$time' conflicts with an existing batch using the days '{$request->days}'."
+                    ])->withInput();
                 }
             }
         }
+        
+        // 3️⃣ Update batch day
+        $batchDay->update(['days' => $request->days]);
 
-        return redirect()->route('admin.batch-days.index')->with('success', 'Batch Day updated successfully.');
+        // 4️⃣ Sync new times: Delete all old times and recreate the new ones
+        $batchDay->times()->delete();
+        foreach ($submittedTimes as $time) {
+            BatchTime::create([
+                'batch_day_id' => $batchDay->id,
+                'time' => $time,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.batch-days.index')
+            ->with('success', 'Batch Day updated successfully.');
     }
+
 
     // Delete batch day + times
     public function destroy(BatchDay $batchDay)
     {
+        // Add a check to prevent deletion if there are associated students
+        if ($batchDay->students()->count() > 0) {
+             return back()->with('error', 'Cannot delete batch day as there are students associated with it.');
+        }
+
         $batchDay->times()->delete();
         $batchDay->delete();
 

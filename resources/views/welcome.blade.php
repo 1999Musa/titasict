@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Arbella Admin - Welcome</title>
+    <title>TITAS ICT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,6 +85,13 @@
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
+         .developer-link {
+            position: absolute;
+            margin-top: 25%;
+            text-align: center;
+            width: 100%;
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center">
@@ -102,6 +109,10 @@
         <a href="{{ route('login') }}" class="login-btn inline-block text-white font-bold px-8 py-3 rounded-full shadow-lg">
             Proceed to Login
         </a>
+    </div>
+    <div class="developer-link text-white text-sm">
+        Developed by <a href="https://www.linkedin.com/in/musa-md-obayed-52aa66251/" class="text-indigo-300 hover:underline " target="_blank">Musa Md Obayed</a>
+        <p>( 01722402173 )</p>
     </div>
 
 </body>

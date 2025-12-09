@@ -180,7 +180,7 @@
         <table>
             <tr>
                 <th>Admission Fee</th>
-                <th>Admission Status</th>
+                <th>Admission Fee Status</th>
                 <th>Total Monthly Paid</th>
                 <th>Total Pending</th>
             </tr>

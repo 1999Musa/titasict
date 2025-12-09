@@ -139,8 +139,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G_Mobile</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Year</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Day</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Time</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch  and Time</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -157,8 +156,8 @@
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->guardian_mobile_number ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->gender }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->exam_year ?? '—' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->batchDay->days ?? 'N/A' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->batchTime->time ?? 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->batchDay->days ?? 'N/A' }} <br> 
+                                {{ $student->batchTime->time ?? 'N/A' }}</td>
 
                             {{-- PAYMENT STATUS --}}
                             <td class="px-4 py-3 text-sm text-gray-600">

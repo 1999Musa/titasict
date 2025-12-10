@@ -94,7 +94,7 @@
                     </button>
 
                     <div x-show="open === 'batch'" x-collapse class="ml-4 mt-1 space-y-1">
-                        <x-admin-link route="admin.batch-days.index" label="Create Batch Days" class="ajax-link" />
+                        <x-admin-link route="admin.batch-days.index" label="+ Batch Days and Time" class="ajax-link" />
                     </div>
                 </div>
 

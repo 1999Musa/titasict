@@ -4,7 +4,6 @@
 
 @section('content')
 
-    <!-- Header -->
     <div class="flex items-center justify-between mb-6">
 
         <a href="{{ route('admin.payments.index') }}"
@@ -17,15 +16,13 @@
         </a>
     </div>
 
-    <!-- Form Card -->
     <div class="bg-white rounded-lg shadow-md border border-gray-200 max-w-2xl">
         <form method="POST" action="{{ route('admin.payments.store') }}">
             @csrf
             <div class="p-6 md:p-8">
                 <div class="space-y-6">
 
-                    <!-- 1. Search Student -->
-                    <div>
+                    <div id="search-student-form"> {{-- Added an ID for the container --}}
                         <label for="searchInput" class="block text-sm font-semibold text-gray-700 mb-2">
                             Search Student by Mobile <span class="text-red-600">*</span>
                         </label>
@@ -57,7 +54,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. Select Student -->
                     <div id="studentSection" class="hidden">
                         <label for="studentSelect" class="block text-sm font-semibold text-gray-700 mb-2">
                             Select Student
@@ -69,7 +65,6 @@
                         </select>
                     </div>
 
-                    <!-- 3. Payment Options -->
                     <div class="border-t border-gray-200 pt-6">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Payment For
@@ -80,7 +75,6 @@
                         </div>
                     </div>
 
-                    <!-- 4. Amount -->
                     <div>
                         <label for="amount" class="block text-sm font-semibold text-gray-700 mb-2">
                             Amount <span class="text-red-600">*</span>
@@ -93,7 +87,6 @@
                         @enderror
                     </div>
 
-                    <!-- 5. Status -->
                     <div>
                         <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
                             Status <span class="text-red-600">*</span>
@@ -108,11 +101,19 @@
                             <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+                    
+                    <div class="flex items-center pt-2">
+                        <input id="send_sms" name="send_sms" type="checkbox" value="1" 
+                               {{ old('send_sms', true) ? 'checked' : '' }} {{-- Default to checked or use old value --}}
+                               class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                        <label for="send_sms" class="ml-2 block text-sm font-medium text-gray-700">
+                            # Send SMS
+                        </label>
+                    </div>
 
                 </div>
             </div>
 
-            <!-- Form Footer -->
             <div class="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200">
                 <div class="flex flex-col sm:flex-row justify-end items-center gap-4">
                     <button type="submit"
@@ -191,41 +192,96 @@
             const errorMsg = document.getElementById('searchError');
             const searchSpinner = document.getElementById('searchSpinner');
             const monthList = document.getElementById('monthList');
+            
+            // Style for dynamically created checkboxes
+            const checkboxClasses = "h-5 w-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 transition";
 
-            // Helper function for cancellable fetch with retries
+            // Helper function for cancellable fetch with retries (kept as is)
             async function retryableFetch(url, options = {}, retries = 3, delay = 1000) {
                 for (let i = 0; i < retries; i++) {
                     try {
                         const response = await fetch(url, options);
                         if (!response.ok) {
-                            // Only retry on 5xx server errors
                             if (response.status >= 500) {
                                 throw new Error(`Server error: ${response.status}`);
                             }
-                            // For client errors (4xx), don't retry, just return the response
                             return response;
                         }
-                        return response; // Success
+                        return response;
                     } catch (error) {
-                        if (i === retries - 1) throw error; // Last retry failed, throw
-                        // Wait with exponential backoff
+                        if (i === retries - 1) throw error;
                         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
                     }
                 }
             }
 
-            // Style for dynamically created checkboxes
-            const checkboxClasses = "h-5 w-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 transition";
-
-            // Function to show a styled message in the month list
+            // Function to show a styled message in the month list (kept as is)
             function setMonthListMessage(message, type = 'info') {
                 let colorClass = 'text-gray-500';
                 if (type === 'error') colorClass = 'text-red-500';
                 monthList.innerHTML = `<p class="col-span-full text-sm ${colorClass}">${message}</p>`;
             }
 
-            // --- Event Listener for Search Button ---
-            searchBtn.addEventListener('click', async function () {
+            // Function to load months for a given studentId (extracted for reuse)
+           // Function to load months for a given studentId (MODIFIED)
+async function loadMonths(studentId) {
+    if (!studentId) {
+        setMonthListMessage('Select a student to load months...', 'info');
+        return;
+    }
+
+    setMonthListMessage('Loading months…', 'info');
+
+    try {
+        const res = await retryableFetch(`/admin/payments/months/${encodeURIComponent(studentId)}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data) {
+            setMonthListMessage('Error loading months.', 'error');
+            return;
+        }
+
+        let html = '';
+
+        // Handle Admission Fee (Use the new property include_admission)
+        if (data.include_admission) { // Check if admission fee is not yet paid
+            html += `
+                <label class="col-span-2 sm:col-span-3 flex items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <input type="checkbox" name="payment_type[]" value="admission" class="${checkboxClasses}">
+                    <span class="ml-3 font-semibold text-emerald-800">Admission Fee</span>
+                </label>
+            `;
+        }
+
+        // Handle Monthly Fees (Use the new property unpaid_months)
+        if (Array.isArray(data.unpaid_months) && data.unpaid_months.length > 0) {
+            data.unpaid_months.forEach(m => {
+                html += `
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <input type="checkbox" name="payment_type[]" value="${m}" class="${checkboxClasses}">
+                        <span class="ml-3 text-sm font-medium text-gray-700">${m}</span>
+                    </label>
+                `;
+            });
+        } else if (!data.include_admission) {
+            // If no unpaid months AND admission is paid
+            setMonthListMessage('All payments have been made.', 'info');
+            return; 
+        }
+
+        monthList.innerHTML = html;
+
+    } catch (err) {
+        console.error(err);
+        setMonthListMessage('Error loading months (network/server).', 'error');
+    }
+}
+
+            // Function to perform the student search (MODIFIED)
+            async function performSearch() {
                 const query = searchInput.value.trim();
                 if (!query) {
                     errorMsg.textContent = "Please enter a mobile number.";
@@ -238,7 +294,7 @@
                 searchBtn.disabled = true;
                 studentSelect.innerHTML = '<option value="">Searching...</option>';
                 studentSection.classList.remove('hidden');
-                setMonthListMessage('Search for a student to load months.', 'info');
+                setMonthListMessage('Searching for student...', 'info'); // Updated message
 
                 try {
                     const res = await retryableFetch(`/admin/payments/search-students?q=${encodeURIComponent(query)}`);
@@ -262,75 +318,43 @@
                         option.textContent = `${s.name} (${s.mobile_number})`;
                         studentSelect.appendChild(option);
                     });
+                    
+                    // NEW LOGIC: If exactly one student is found, auto-select them and trigger month loading
+                    if (students.length === 1) {
+                        const studentId = students[0].id;
+                        studentSelect.value = studentId;
+                        loadMonths(studentId); // Automatically load months
+                    } else {
+                        // If multiple students, prompt user to select
+                        setMonthListMessage('Multiple students found. Please select one above.', 'info');
+                    }
 
                 } catch (err) {
                     console.error(err);
                     errorMsg.textContent = "Error searching students.";
                     errorMsg.classList.remove('hidden');
                     studentSelect.innerHTML = '<option value="">Search failed</option>';
+                    setMonthListMessage('Search failed.', 'error');
                 } finally {
                     searchSpinner.classList.add('hidden');
                     searchBtn.disabled = false;
                 }
+            }
+            
+            // --- Event Listener for Search Button ---
+            searchBtn.addEventListener('click', performSearch);
+
+            // --- Event Listener for Enter Key in Search Input ---
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    performSearch();
+                }
             });
 
-            // --- Event Listener for Student Selection ---
-            studentSelect.addEventListener('change', async function () {
-                const studentId = this.value;
-
-                if (!studentId) {
-                    setMonthListMessage('Select a student to load months...', 'info');
-                    return;
-                }
-
-                setMonthListMessage('Loading months…', 'info');
-
-                try {
-                    const res = await retryableFetch(`/admin/payments/months/${encodeURIComponent(studentId)}`, {
-                        headers: { 'Accept': 'application/json' }
-                    });
-
-                    const data = await res.json().catch(() => null);
-
-                    if (!res.ok || !data) {
-                        setMonthListMessage('Error loading months.', 'error');
-                        return;
-                    }
-
-                    let html = '';
-
-                    // Handle Admission Fee
-                    if (data.include_admission) {
-                        html += `
-                                <label class="col-span-2 sm:col-span-3 flex items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                                    <input type="checkbox" name="payment_type[]" value="admission" class="${checkboxClasses}">
-                                    <span class="ml-3 font-semibold text-emerald-800">Admission Fee</span>
-                                </label>
-                            `;
-                    }
-
-                    // Handle Monthly Fees
-                    if (Array.isArray(data.months) && data.months.length > 0) {
-                        data.months.forEach(m => {
-                            html += `
-                                    <label class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                        <input type="checkbox" name="payment_type[]" value="${m}" class="${checkboxClasses}">
-                                        <span class="ml-3 text-sm font-medium text-gray-700">${m}</span>
-                                    </label>
-                                `;
-                        });
-                    } else if (!data.include_admission) {
-                        // Only show this if there are no months AND no admission fee
-                        setMonthListMessage('All months have been paid.', 'info');
-                        return; // Exit before setting html
-                    }
-
-                    monthList.innerHTML = html;
-
-                } catch (err) {
-                    console.error(err);
-                    setMonthListMessage('Error loading months (network/server).', 'error');
-                }
+            // --- Event Listener for Student Selection (MODIFIED to use loadMonths function) ---
+            studentSelect.addEventListener('change', function () {
+                loadMonths(this.value);
             });
         });
     </script>

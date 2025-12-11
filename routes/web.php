@@ -56,7 +56,7 @@ Route::middleware(['auth'])
             // --- Batch Management (Assuming both roles need to view/create these) ---
             Route::resource('batches', BatchController::class)->only(['index', 'create', 'store']);
             Route::resource('batch-days', BatchDayController::class)->only(['index', 'create', 'store']);
-            Route::resource('batch-times', BatchTimeController::class)->only(['index', 'create', 'store']);
+            // Route::resource('batch-times', BatchTimeController::class)->only(['index', 'create', 'store']);
         });
 
         // ====================================================================

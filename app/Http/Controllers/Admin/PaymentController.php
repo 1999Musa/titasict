@@ -41,44 +41,41 @@ class PaymentController extends Controller
         $payments = $query->get();
 
         // Group payments by student_id + created_at exact timestamp
-        $grouped = $payments->groupBy(function ($payment) {
-            // Use iso format to ensure exact grouping for items created in same DB query (same timestamp)
-            return $payment->student_id . '|' . $payment->created_at->format('Y-m-d H:i:s');
-        });
+ $grouped = $payments->groupBy(function ($payment) {
+    // If student exists, use id; otherwise use 0 or 'deleted'
+    $studentId = $payment->student_id ?? 0;
+    return $studentId . '|' . $payment->created_at->format('Y-m-d H:i:s');
+});
+
 
         // Build an array of display rows from groups
         $rows = $grouped->map(function ($items, $groupKey) {
-            /** @var \Illuminate\Database\Eloquent\Collection $items */
-            $first = $items->first();
+    $first = $items->first();
 
-            $types = $items->pluck('type')->unique()->values()->all(); // ['admission','monthly']
-            // collect months for monthly entries
-            $months = $items->where('type', 'monthly')->pluck('month')->filter()->unique()->values()->all();
+    // Skip if student deleted
+    if (!$first->student) {
+        return null;
+    }
 
-            // *** FIX 1: Use the amount from the first item, assuming it holds the total amount for the grouped transaction. ***
-            $amountSum = $items->first()->amount;
+    $types = $items->pluck('type')->unique()->values()->all();
+    $months = $items->where('type', 'monthly')->pluck('month')->filter()->unique()->values()->all();
+    $amountSum = $items->first()->amount;
+    $status = $items->pluck('status')->unique()->count() === 1
+        ? $items->first()->status
+        : ($items->contains(fn($p) => $p->status !== 'Paid') ? 'Pending' : 'Paid');
 
-            // Determine status: if ANY payment in group is Pending -> group considered Pending
-            $status = $items->pluck('status')->unique()->count() === 1
-                ? $items->first()->status
-                : ($items->contains(function ($p) {
-                    return $p->status !== 'Paid'; }) ? 'Pending' : 'Paid');
+    return (object) [
+        'student' => $first->student,
+        'types' => $types,
+        'months' => $months,
+        'amount' => $amountSum,
+        'status' => $status,
+        'created_at' => $first->created_at,
+        'ids' => $items->pluck('id')->toArray(),
+        'primary_id' => $first->id,
+    ];
+})->filter()->values(); // filter removes nulls
 
-            // ids for actions
-            $ids = $items->pluck('id')->toArray();
-
-            return (object) [
-                'student' => $first->student,
-                'types' => $types,
-                'months' => $months,
-                'amount' => $amountSum,
-                'status' => $status,
-                'created_at' => $first->created_at,
-                'ids' => $ids,
-                // pick one id to use for edit/delete/print (we use the first)
-                'primary_id' => $first->id,
-            ];
-        })->values();
 
         // Manual pagination for grouped rows
         $perPage = 12;
@@ -160,30 +157,43 @@ class PaymentController extends Controller
         return view('admin.payments.edit', compact('payment', 'students'));
     }
 
-    public function update(Request $request, Payment $payment)
+public function update(Request $request, Payment $payment)
 {
     $data = $request->validate([
-        'student_id' => 'required|exists:students,id',
-        'payment_type' => 'required|array',
+        'payment_type' => 'required|array|min:1',
         'payment_type.*' => 'string',
+        'student_id' => 'required|exists:students,id',
         'amount' => 'required|numeric|min:0',
         'status' => 'required|string',
     ]);
 
-    $selected = $data['payment_type'][0];
+    // 1️⃣ Identify the PAYMENT GROUP of the item being edited
+    $groupIds = Payment::where('student_id', $payment->student_id)
+                ->where('created_at', $payment->created_at)
+                ->pluck('id');
 
-    $payment->update([
-        'student_id' => $data['student_id'],
-        'type' => $selected === 'admission' ? 'admission' : 'monthly',
-        'month' => $selected === 'admission' ? null : $selected,
-        'amount' => $data['amount'],
-        'status' => $data['status'],
-    ]);
+    // 2️⃣ Delete all OLD entries in this group
+    Payment::whereIn('id', $groupIds)->delete();
+
+    // 3️⃣ Re-create payments EXACTLY based on updated user selections
+    foreach ($data['payment_type'] as $typeOrMonth) {
+
+        Payment::create([
+            'student_id' => $data['student_id'],
+            'type'       => ($typeOrMonth === 'admission') ? 'admission' : 'monthly',
+            'month'      => ($typeOrMonth === 'admission') ? null : $typeOrMonth,
+            'amount'     => $data['amount'],
+            'status'     => $data['status'],
+            'created_at' => $payment->created_at, // keep grouping consistent
+        ]);
+    }
 
     return redirect()
         ->route('admin.payments.index')
         ->with('success', 'Payment updated successfully.');
 }
+
+
 
 
    public function destroy(Payment $payment, Request $request)
@@ -245,13 +255,13 @@ class PaymentController extends Controller
 
     // In app/Http/Controllers/Admin/PaymentController.php
 
-public function getMonths(Student $student): JsonResponse
+public function getMonths(Student $student, Request $request): JsonResponse
 {
     try {
         if (!$student->joining_month) {
             return response()->json([
-                'admission_paid' => false,
-                'months' => [],
+                'include_admission' => true,
+                'unpaid_months' => [],
                 'paid_months' => [],
             ]);
         }
@@ -272,7 +282,7 @@ public function getMonths(Student $student): JsonResponse
         $join = $join->startOfMonth();
         $end = now()->startOfMonth();
 
-        // Get all months between joining and now
+        // All months from joining to now
         $months = [];
         $temp = $join->copy();
         while ($temp <= $end) {
@@ -280,21 +290,29 @@ public function getMonths(Student $student): JsonResponse
             $temp->addMonth();
         }
 
-        // Get paid data
+        // Paid payments
         $paidPayments = Payment::where('student_id', $student->id)
             ->where('status', 'Paid')
             ->get();
 
         $admissionPaid = $paidPayments->contains('type', 'admission');
+        $paidMonths = $paidPayments->where('type', 'monthly')->pluck('month')->toArray();
 
-        $paidMonths = $paidPayments
-            ->where('type', 'monthly')
-            ->pluck('month')
-            ->toArray();
+        // Unpaid months
+        $unpaidMonths = array_diff($months, $paidMonths);
+
+        // For edit, return all months but mark paid/unpaid
+        if ($request->filled('for_edit')) {
+            return response()->json([
+                'include_admission' => !$admissionPaid,
+                'paid_months' => $paidMonths,
+                'unpaid_months' => array_values($unpaidMonths),
+            ]);
+        }
 
         return response()->json([
-            'admission_paid' => $admissionPaid,
-            'months' => $months,
+            'include_admission' => !$admissionPaid,
+            'unpaid_months' => array_values($unpaidMonths),
             'paid_months' => $paidMonths,
         ]);
 
@@ -304,37 +322,32 @@ public function getMonths(Student $student): JsonResponse
 }
 
 
+
     public function storeAndPrintPdf(Request $request)
-    {
-        $data = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'payment_type' => 'required|array',
-            'payment_type.*' => 'string',
-            'amount' => 'required|numeric|min:0',
-            'status' => 'required|string',
-        ]);
+{
+    $data = $request->validate([
+        'student_id' => 'required|exists:students,id',
+        'payment_type' => 'required|array',
+        'payment_type.*' => 'string',
+    ]);
 
-        $payments = [];
+    $student = Student::with(['payments' => function($q) use ($data) {
+        $q->whereIn('month', array_filter($data['payment_type'], fn($v) => $v !== 'admission'))
+          ->orWhere('type', 'admission');
+    }])->findOrFail($data['student_id']);
 
-        foreach ($data['payment_type'] as $typeOrMonth) {
-            $payment = Payment::create([
-                'student_id' => $data['student_id'],
-                'type' => ($typeOrMonth === 'admission') ? 'admission' : 'monthly',
-                'month' => ($typeOrMonth === 'admission') ? null : $typeOrMonth,
-                'amount' => $data['amount'],
-                'status' => $data['status'],
-            ]);
+    $payments = $student->payments
+        ->filter(function($p) use ($data) {
+            if ($p->type === 'admission') return in_array('admission', $data['payment_type']);
+            return in_array($p->month, $data['payment_type']);
+        });
 
-            $payments[] = $payment;
-        }
+    $pdf = Pdf::loadView('admin.payments.pdf', compact('student', 'payments'));
+    $fileName = 'Payment_' . str_replace(' ', '_', $student->name) . '.pdf';
 
-        $student = Student::with('payments')->findOrFail($data['student_id']);
+    return $pdf->download($fileName);
+}
 
-        $pdf = Pdf::loadView('admin.payments.pdf', compact('student', 'payments'));
-        $fileName = 'Payment_' . str_replace(' ', '_', $student->name) . '.pdf';
-
-        return $pdf->download($fileName);
-    }
 
 
 }

@@ -48,77 +48,77 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const studentId = document.querySelector('input[name="student_id"]').value;
+
     const monthList = document.getElementById("monthList");
+    const studentId = document.querySelector('input[name="student_id"]').value; // Hidden input
 
-    const editingType = @json($payment->type);
-    const editingMonth = @json($payment->month);
+    // Tailwind checkbox classes
+    const checkboxClasses = "h-5 w-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 transition";
 
-    function loadMonths() {
-        monthList.innerHTML = `<p class="col-span-3">Loading…</p>`;
+    async function loadMonthsForEdit(studentId) {
+        if (!studentId) return;
 
-        fetch(`/admin/payments/months/${studentId}`)
-            .then(res => res.json())
-            .then(data => {
-                let html = "";
+        monthList.innerHTML = '<p class="col-span-full text-sm text-gray-500">Loading months…</p>';
 
-                // ============================
-                // ADMISSION PAYMENT
-                // ============================
-                const admissionChecked =
-                    editingType === "admission"
-                        ? true
-                        : data.admission_paid;
+        try {
+            const res = await fetch(`/admin/payments/months/${studentId}?for_edit=1`, {
+                headers: { 'Accept': 'application/json' }
+            });
 
+            const data = await res.json();
+
+            if (!res.ok || !data) {
+                monthList.innerHTML = '<p class="col-span-full text-sm text-red-500">Error loading months.</p>';
+                return;
+            }
+
+            let html = '';
+
+            // Admission Fee
+            html += `
+                <label class="col-span-2 sm:col-span-3 flex items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <input type="checkbox" name="payment_type[]" value="admission" class="${checkboxClasses}" ${data.include_admission ? '' : 'checked'}>
+                    <span class="ml-3 font-semibold text-emerald-800">Admission Fee</span>
+                </label>
+            `;
+
+            // Monthly Fees
+            const allMonths = [...data.unpaid_months, ...data.paid_months];
+            allMonths.sort((a, b) => new Date(a) - new Date(b));
+
+            allMonths.forEach(month => {
+                const checked = data.paid_months.includes(month) ? 'checked' : '';
                 html += `
-                    <label class="inline-flex items-center col-span-3">
-                        <input type="checkbox" name="payment_type[]" value="admission"
-                            class="payment-option"
-                            ${admissionChecked ? "checked" : ""}>
-                        <span class="ml-2">Admission Fee</span>
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <input type="checkbox" name="payment_type[]" value="${month}" class="${checkboxClasses}" ${checked}>
+                        <span class="ml-3 text-sm font-medium text-gray-700">${month}</span>
                     </label>
                 `;
-
-                // ============================
-                // MONTHLY PAYMENTS
-                // ============================
-                data.months.forEach(month => {
-                    const isPaid = data.paid_months.includes(month);
-                    const isEditing = editingType === "monthly" && editingMonth === month;
-
-                    const checked = isPaid || isEditing ? "checked" : "";
-
-                    html += `
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="payment_type[]" value="${month}"
-                                class="payment-option"
-                                ${checked}>
-                            <span class="ml-2">${month}</span>
-                        </label>
-                    `;
-                });
-
-                monthList.innerHTML = html;
-
-                enforceSingleSelect();
             });
+
+            monthList.innerHTML = html;
+
+        } catch (err) {
+            console.error(err);
+            monthList.innerHTML = '<p class="col-span-full text-sm text-red-500">Error loading months (network/server).</p>';
+        }
     }
 
-    function enforceSingleSelect() {
-        const options = document.querySelectorAll(".payment-option");
-
-        options.forEach(opt => {
-            opt.addEventListener("change", function () {
-                if (this.checked) {
-                    options.forEach(o => {
-                        if (o !== this) o.checked = false;
-                    });
-                }
-            });
-        });
+    // Initial load
+    if (studentId) {
+        loadMonthsForEdit(studentId);
     }
 
-    loadMonths();
+    // Prevent form submit if nothing is checked
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const checked = this.querySelectorAll('input[name="payment_type[]"]:checked');
+        if (checked.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one payment option (admission or monthly).');
+            return false;
+        }
+    });
+
 });
 </script>
 

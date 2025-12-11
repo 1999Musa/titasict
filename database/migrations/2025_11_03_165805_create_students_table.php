@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('batch_day_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('batch_time_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('batch_time_id')->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('mobile_number')->unique();
             $table->string('guardian_mobile_number')->nullable();

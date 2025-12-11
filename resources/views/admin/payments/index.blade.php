@@ -229,26 +229,31 @@
                                     </form>
 
                                     <!-- Print all payments in this group (use storeAndPrintPdf style) -->
-                                    <form action="{{ route('admin.payments.savePdf') }}" method="POST" target="_blank">
-                                        @csrf
-                                        <input type="hidden" name="student_id" value="{{ $row->student->id }}">
-                                        @foreach($row->months as $m)
-                                            <input type="hidden" name="payment_type[]" value="{{ $m }}">
-                                        @endforeach
-                                        @if(in_array('admission', $row->types))
-                                            <input type="hidden" name="payment_type[]" value="admission">
-                                        @endif
-                                        <input type="hidden" name="amount" value="{{ $row->amount }}">
-                                        <input type="hidden" name="status" value="{{ $row->status }}">
-                                        <button type="submit"
-                                            class="flex w-20 items-center justify-center gap-1 py-1 px-3 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                                            </svg>
-                                            Print
-                                        </button>
-                                    </form>
+                                    <!-- Print all payments in this group (use storeAndPrintPdf style) -->
+<form action="{{ route('admin.payments.savePdf') }}" method="POST" target="_blank" class="inline-block m-0 p-0">
+    @csrf
+    <input type="hidden" name="student_id" value="{{ $row->student->id }}">
+
+    {{-- Only include actual months and admission if paid --}}
+    @foreach($row->months as $m)
+        <input type="hidden" name="payment_type[]" value="{{ $m }}">
+    @endforeach
+    @if(in_array('admission', $row->types))
+        <input type="hidden" name="payment_type[]" value="admission">
+    @endif
+    <input type="hidden" name="amount" value="{{ $row->amount }}">
+    <input type="hidden" name="status" value="{{ $row->status }}">
+
+    <button type="submit"
+        class="flex w-20 items-center justify-center gap-1 py-1 px-3 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+        </svg>
+        Print
+    </button>
+</form>
+
                                 </div>
                             </td>
                         </tr>

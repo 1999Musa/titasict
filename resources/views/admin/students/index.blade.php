@@ -156,8 +156,14 @@
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->guardian_mobile_number ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->gender }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->exam_year ?? '—' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $student->batchDay->days ?? 'N/A' }} <br> 
-                                {{ $student->batchTime->time ?? 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                                {{ $student->batchDay->days ?? 'N/A' }} <br> 
+                                <span class="{{ $student->batchTime ? 'text-green-600' : 'text-red-500' }}">
+                                    {{ $student->batchTime->time ?? 'Not Assigned' }}
+                                </span>
+                            </td>
+
+
 
                             {{-- PAYMENT STATUS --}}
                             <td class="px-4 py-3 text-sm text-gray-600">

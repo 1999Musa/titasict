@@ -14,6 +14,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/env-test', function () {
+    return [
+        'env' => env('ALPHA_SMS_API_KEY'),
+        'config' => config('services.alpha_sms.key')
+    ];
+});
+
+
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
@@ -30,29 +39,32 @@ Route::middleware(['auth'])
         // 🔑 Group 1: Access for Super-Admin AND Staff (Index and Create)
         // This includes all view/read routes and creation routes.
         // ====================================================================
-
+    
         Route::middleware(['role:super-admin,staff'])->group(function () {
 
             // --- Student Routes ---
             // Staff can view the index and special routes
             Route::get('students/ex', [StudentController::class, 'exStudents'])->name('students.ex');
             Route::post('students/move-to-ex', [StudentController::class, 'moveToEx'])->name('students.moveToEx');
-            
+            Route::patch('/students/{student}/restore', [StudentController::class, 'restoreToActive'])
+                ->name('students.restore');
+
+
             // Resource: Index and Create/Store for Students
             Route::get('students', [StudentController::class, 'index'])->name('students.index');
             Route::get('students/create', [StudentController::class, 'create'])->name('students.create');
             Route::post('students', [StudentController::class, 'store'])->name('students.store');
-            
+
             Route::get('students/{student}/pdf', [StudentController::class, 'generatePdf'])->name('students.pdf');
 
             // --- Payment Routes (Index and Create) ---
             Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
-            
+
             // Special payment actions (accessible to both)
             Route::get('payments/search-students', [PaymentController::class, 'searchStudents'])->name('payments.searchStudents');
             Route::match(['get', 'post'], 'payments/save-pdf', [PaymentController::class, 'storeAndPrintPdf'])->name('payments.savePdf');
             Route::get('payments/months/{student}', [PaymentController::class, 'getMonths'])->name('payments.months');
-            
+
             // --- Batch Management (Assuming both roles need to view/create these) ---
             Route::resource('batches', BatchController::class)->only(['index', 'create', 'store']);
             Route::resource('batch-days', BatchDayController::class)->only(['index', 'create', 'store']);
@@ -63,15 +75,15 @@ Route::middleware(['auth'])
         // 🔒 Group 2: Access ONLY for Super-Admin (Show, Edit, Update, Destroy)
         // This includes all modification and deletion routes.
         // ====================================================================
-
+    
         Route::middleware(['role:super-admin'])->group(function () {
-            
+
             // --- Student Routes (Remaining Resource Actions) ---
             Route::resource('students', StudentController::class)->except(['index', 'create', 'store']);
-            
+
             // --- Payment Routes (Remaining Resource Actions) ---
             Route::resource('payments', PaymentController::class)->except(methods: ['index', 'create', 'store']);
-            
+
             // Bulk delete payment (Delete action)
             Route::delete('payments/bulk-delete', [PaymentController::class, 'bulkDelete'])->name('payments.bulkDelete');
 

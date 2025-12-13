@@ -97,8 +97,7 @@
         </div>
 
         <p class="text-md text-gray-100 mb-8 leading-relaxed">
-            স্বাগতম! আপনার কোচিং সেন্টার পরিচালনার জন্য সেরা সমাধান। লগইন করুন এবং ফি, ও শিক্ষার্থীদের তথ্য পরিচালনা
-            করুন।
+            স্বাগতম! আপনার কোচিং সেন্টার পরিচালনার জন্য সেরা সমাধান।
         </p>
 
         <a href="{{ route('login') }}"
@@ -108,15 +107,15 @@
 
         <div class="developer-link pt-6 text-center">
             <p class="text-gray-400 text-sm mb-3">
-                সফটওয়্যার ডেভলপ করেছেন: <br>
+                Developed By / ডেভলপ করেছেন: <br>
                 <a href="https://www.linkedin.com/in/musa-md-obayed-52aa66251/"
-                    class="font-semibold text-emerald-400">Musa Md Obayed</a>
+                    class=" font-semibold text-emerald-400" target="_blank">Musa Md Obayed</a>
                 (<a href="tel:01722402173" class="text-blue-400 hover:underline">01722402173</a>)
             </p>
             <div class="flex justify-center qr-container">
                 {!! QrCode::size(65)->generate('https://www.linkedin.com/in/musa-md-obayed-52aa66251/') !!}
             </div>
-            <p class="text-xs text-gray-500 mt-2">Scan for Developer Portfolio (LinkedIn)</p>
+            <p class="text-xs text-gray-300 mt-2">Scan for Developer's Portfolio (LinkedIn)</p>
         </div>
 
     </div>

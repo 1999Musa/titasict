@@ -179,4 +179,11 @@ class StudentController extends Controller
 
         return $pdf->download($fileName);
     }
+    public function restoreToActive(Student $student)
+{
+    $student->update(['status' => 'active']);
+
+    return back()->with('success', 'Student has been restored to Active.');
+}
+
 }

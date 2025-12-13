@@ -11,6 +11,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
+use App\Services\AlphaSmsService;
+
+
 
 class PaymentController extends Controller
 {
@@ -128,27 +131,100 @@ class PaymentController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'payment_type' => 'required|array',
-            'payment_type.*' => 'string',
-            'amount' => 'required|numeric|min:0',
-            'status' => 'required|string',
+{
+    $data = $request->validate([
+        'student_id' => 'required|exists:students,id',
+        'payment_type' => 'required|array|min:1',
+        'payment_type.*' => 'string',
+        'amount' => 'required|numeric|min:0',
+        'status' => 'required|string',
+        'send_sms' => 'nullable|boolean',
+    ]);
+
+    $student = Student::findOrFail($data['student_id']);
+
+    foreach ($data['payment_type'] as $typeOrMonth) {
+        Payment::create([
+            'student_id' => $data['student_id'],
+            'type' => ($typeOrMonth === 'admission') ? 'admission' : 'monthly',
+            'month' => ($typeOrMonth === 'admission') ? null : $typeOrMonth,
+            'amount' => $data['amount'],
+            'status' => $data['status'],
         ]);
-
-        foreach ($data['payment_type'] as $typeOrMonth) {
-            Payment::create([
-                'student_id' => $data['student_id'],
-                'type' => ($typeOrMonth === 'admission') ? 'admission' : 'monthly',
-                'month' => ($typeOrMonth === 'admission') ? null : $typeOrMonth,
-                'amount' => $data['amount'],
-                'status' => $data['status'],
-            ]);
-        }
-
-        return redirect()->route('admin.payments.index')->with('success', 'Payment(s) added successfully.');
     }
+
+    $apiKey = env('ALPHA_SMS_API_KEY');
+$sender = env('ALPHA_SMS_SENDER_ID');
+
+\Log::info('SMS API KEY', ['key' => $apiKey]);
+
+    \Log::info('SMS checkbox value', [
+    'send_sms' => $request->send_sms,
+    'status' => $data['status']
+]);
+
+\Log::info('SMS API KEY', [
+    'key' => config('services.alpha_sms.api_key')
+]);
+
+    $student = Student::findOrFail($data['student_id']);
+
+$paidItems = collect($data['payment_type'])
+    ->map(fn ($v) => $v === 'admission' ? 'Admission Fee' : $v)
+    ->implode(', ');
+
+$smsText = "Dear {$student->name}, your payment for {$paidItems} has been received. Thank you.";
+
+
+if ($request->send_sms) {
+    // Normalize mobile number
+    $studentNumber = $this->normalizeMobile($student->mobile_number);
+
+
+    $studentName = $student->name;
+    $monthsPaid = implode(', ', $data['payment_type']);
+    $amount = $request->amount;
+
+    $smsText = "Hello {$studentName}, Payment received for: {$monthsPaid}. Amount: {$amount} BDT. Thank you.";
+
+    $apiKey = env('ALPHA_SMS_API_KEY');
+    $sender = env('ALPHA_SMS_SENDER_ID');
+
+    try {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.sms.net.bd/sendsms',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'api_key' => $apiKey,
+                'to' => $studentNumber,
+                'msg' => $smsText,
+                // 'sender_id' => $sender,
+            ],
+            CURLOPT_CAINFO => "C:\\wamp64\\php\\extras\\ssl\\cacert.pem", // SSL CA
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $response = curl_exec($curl);
+        if ($err = curl_error($curl)) {
+            \Log::error('SMS Exception', ['error' => $err]);
+        } else {
+            \Log::info('SMS Response', ['response' => $response]);
+        }
+        curl_close($curl);
+    } catch (\Throwable $e) {
+        \Log::error('SMS Exception', ['error' => $e->getMessage()]);
+    }
+}
+
+
+
+
+    return redirect()
+        ->route('admin.payments.index')
+        ->with('success', 'Payment(s) added successfully.');
+}
+
 
     public function edit(Payment $payment)
     {
@@ -347,6 +423,46 @@ public function getMonths(Student $student, Request $request): JsonResponse
 
     return $pdf->download($fileName);
 }
+
+private function buildPaymentSms(Student $student, array $paymentTypes, float $amount, string $status): string
+{
+    $Company = "TITAS ENTERPRISE"; // <-- Your brand/company name
+
+    $items = [];
+
+    foreach ($paymentTypes as $p) {
+        if ($p === 'admission') {
+            $items[] = 'Admission Fee';
+        } else {
+            $items[] = $p;
+        }
+    }
+
+    $itemsText = implode(', ', $items);
+
+    return "{$Company}: Dear {$student->name}, Payment received successfully for {$itemsText}. "
+        . "Amount: {$amount} BDT. Status: {$status}. Thank you!";
+}
+
+
+private function normalizeMobile(string $number): string
+{
+    // Remove non-numeric characters
+    $number = preg_replace('/\D/', '', $number);
+
+    // If number starts with 0, replace with 88
+    if (str_starts_with($number, '0')) {
+        return '88' . ltrim($number, '0');
+    }
+
+    // Already starts with 880
+    if (str_starts_with($number, '880')) {
+        return $number;
+    }
+
+    return $number;
+}
+
 
 
 
